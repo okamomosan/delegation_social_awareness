@@ -1,0 +1,2086 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\hherz\Google Drive\The Value of Authority\Econometrica - Final\Data and Analysis\Value.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}21 Jul 2014, 13:50:47
+{txt}
+{com}. 
+. use Value.dta
+{txt}
+{com}. 
+. 
+. * The control treatment for corner solutions is only analyzed in the end. We drop it for the main analysis:
+. keep if maecontrol==0
+{txt}(340 observations deleted)
+
+{com}. 
+. ******************************************************************************************
+. * Footnote 8: Frequency of preferred variant choices:
+. tab varianta if type==0 & situation!=5 & situation!=10
+
+   {txt}varianta {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}         29        5.25        5.25
+{txt}          2 {c |}{res}        523       94.75      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}        552      100.00
+{txt}
+{com}. tab variantp if type==1 & situation!=5 & situation!=10
+
+   {txt}variantp {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}        540       97.83       97.83
+{txt}          2 {c |}{res}         12        2.17      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}        552      100.00
+{txt}
+{com}. dis 1-(41/(69*2*10))
+{res}.97028986
+{txt}
+{com}. * 97.03% of subjects chose their preferred project.
+. 
+. ******************************************************************************************
+. * For simplicity, we now drop agents from the data set:
+. drop if type==0
+{txt}(690 observations deleted)
+
+{com}. 
+. ******************************************************************************************
+. * Footnote 9: testing for order effects:
+. 
+. egen mpeffort=mean(peffort), by(subject)
+{txt}
+{com}. egen mmae=mean(mae), by(subject)
+{txt}
+{com}. 
+. ttest mpeffort if situation==1, by(revorder)
+
+{txt}Two-sample t test with equal variances
+{hline 9}{c TT}{hline 68}
+   Group{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+       0 {c |}{res}{col 12}     52{col 22} 60.60192{col 34} 2.066973{col 46} 14.90516{col 58}  56.4523{col 70} 64.75155
+       {txt}1 {c |}{res}{col 12}     17{col 22} 58.22941{col 34} 5.128021{col 46} 21.14337{col 58} 47.35849{col 70} 69.10033
+{txt}{hline 9}{c +}{hline 68}
+combined {c |}{res}{col 12}     69{col 22} 60.01739{col 34} 1.988626{col 46} 16.51877{col 58} 56.04915{col 70} 63.98563
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 22} 2.372511{col 34} 4.640316{col 58}-6.889598{col 70} 11.63462
+{txt}{hline 9}{c BT}{hline 68}
+    diff = mean({res}0{txt}) - mean({res}1{txt})                                      t = {res}  0.5113
+{txt}Ho: diff = 0                                     degrees of freedom = {res}      67
+
+    {txt}Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = {res}0.6946         {txt}Pr(|T| > |t|) = {res}0.6108          {txt}Pr(T > t) = {res}0.3054
+{txt}
+{com}. * p=0.61
+. ttest mmae if situation==1, by(revorder)
+
+{txt}Two-sample t test with equal variances
+{hline 9}{c TT}{hline 68}
+   Group{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+       0 {c |}{res}{col 12}     52{col 22} 51.60192{col 34} 2.352136{col 46}  16.9615{col 58} 46.87981{col 70} 56.32403
+       {txt}1 {c |}{res}{col 12}     17{col 22} 49.63529{col 34} 5.484671{col 46} 22.61388{col 58} 38.00831{col 70} 61.26228
+{txt}{hline 9}{c +}{hline 68}
+combined {c |}{res}{col 12}     69{col 22} 51.11739{col 34} 2.209415{col 46} 18.35278{col 58} 46.70857{col 70} 55.52621
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 22} 1.966629{col 34} 5.159967{col 58}-8.332709{col 70} 12.26597
+{txt}{hline 9}{c BT}{hline 68}
+    diff = mean({res}0{txt}) - mean({res}1{txt})                                      t = {res}  0.3811
+{txt}Ho: diff = 0                                     degrees of freedom = {res}      67
+
+    {txt}Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = {res}0.6478         {txt}Pr(|T| > |t|) = {res}0.7043          {txt}Pr(T > t) = {res}0.3522
+{txt}
+{com}. * p=0.70
+. 
+. * No difference in mean effort and mae choices due to order.
+. 
+. ******************************************************************************************
+. * Results Secion. 
+. 
+. **********************************************************************************
+. * Section 4.1:
+. 
+. // Generate the percentage difference in every game for every individual:
+. gen IV_percent=IV/offeraccept
+{txt}
+{com}. 
+. // Average percentage difference:
+. sum IV_percent
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 2}IV_percent {c |}{res}       690    .1669216    .3294391  -.5833333        2.8
+{txt}
+{com}. * The average difference is 16.7 percent.
+. 
+. // For the t-test, we average the certainty equivalents at the individual level:
+. egen mean_IV_percent=mean(IV_percent), by(subject)
+{txt}
+{com}. ttest mean_IV_percent=0 if situation==1
+
+{txt}One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+mean_I~t {c |}{res}{col 12}     69{col 22} .1669216{col 34}  .018778{col 46} .1559815{col 58} .1294508{col 70} .2043925
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}mean_IV_percent{txt})                                  t = {res}  8.8892
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+{txt}
+{com}. * Percentage difference is different from zero at the p<0.001 level.
+. 
+. sum mean_IV_percent if situation==1
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+mean_IV_pe~t {c |}{res}        69    .1669216    .1559815  -.0746761      .6675
+{txt}
+{com}. * Standard Deviation is 15.6 percent.
+. 
+. // We compute the individual average certainty equivalents for the control and delegation lotteries and test whether their difference is different from zero:
+. 
+. egen mean_oa=mean(offeraccept), by(subject)
+{txt}
+{com}. egen mean_oad=mean(offeracceptd), by(subject)
+{txt}
+{com}. 
+. gen mean_IV=mean_oad-mean_oa
+{txt}
+{com}. // Signed-Rank Test whether average difference in certainty equivalents is equal to zero:
+. signrank mean_IV=0 if situation==1
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     57{col 26}    2223.5{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     11{col 26}     190.5{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -0.50
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27973.00
+
+{txt}Ho: mean_IV = 0 
+{col 14}z = {res}  6.078
+{txt}{col 5}Prob > |z| = {res}  0.0000
+{txt}
+{com}. * rejected at the p<0.001 level
+. dis 57/69
+{res}.82608696
+{txt}
+{com}. * 83% have a positive average value, 19% a negative average value.
+. dis 12/69
+{res}.17391304
+{txt}
+{com}. * 17% zero or negative value
+. 
+. * Test for difference in certainty equivalents for each individual game:
+. bysort situation: ttest IV_percent=0
+
+{txt}{hline}
+-> situation = 1
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1752583{col 34} .0274231{col 46} .2277938{col 58} .1205362{col 70} .2299803
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  6.3909
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 2
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1621231{col 34} .0383474{col 46} .3185375{col 58} .0856021{col 70} .2386442
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  4.2277
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0001          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 3
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1740751{col 34} .0384001{col 46} .3189754{col 58} .0974489{col 70} .2507014
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  4.5332
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 4
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .0985857{col 34}  .019006{col 46} .1578759{col 58} .0606597{col 70} .1365116
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  5.1871
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 5
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1874845{col 34} .0470051{col 46} .3904535{col 58} .0936873{col 70} .2812817
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  3.9886
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9999         {txt}Pr(|T| > |t|) = {res}0.0002          {txt}Pr(T > t) = {res}0.0001
+
+{txt}{hline}
+-> situation = 6
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .2261957{col 34} .0500237{col 46} .4155281{col 58}  .126375{col 70} .3260165
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  4.5218
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 7
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1522453{col 34} .0345273{col 46}  .286805{col 58} .0833473{col 70} .2211434
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  4.4094
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 8
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .1685194{col 34} .0283846{col 46} .2357805{col 58} .1118788{col 70} .2251601
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  5.9370
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 9
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22}  .062012{col 34} .0256866{col 46}  .213369{col 58} .0107551{col 70} .1132688
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  2.4142
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9908         {txt}Pr(|T| > |t|) = {res}0.0185          {txt}Pr(T > t) = {res}0.0092
+
+{txt}{hline}
+-> situation = 10
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_per~t {c |}{res}{col 12}     69{col 22} .2627173{col 34} .0638802{col 46} .5306286{col 58} .1352464{col 70} .3901883
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}IV_percent{txt})                                       t = {res}  4.1127
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9999         {txt}Pr(|T| > |t|) = {res}0.0001          {txt}Pr(T > t) = {res}0.0001
+{txt}
+{com}. bysort situation: signrank IV_percent=0
+
+{txt}{hline}
+-> situation = 1
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     52{col 26}      2114{col 38}    1193.5
+    {txt}negative {c |}{res}{col 17}     10{col 26}       273{col 38}    1193.5
+        {txt}zero {c |}{res}{col 17}      7{col 26}        28{col 38}        28
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -6.13
+{txt}adjustment for zeros{col 22}{res}    -35.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27932.63
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  5.508
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 2
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     40{col 26}      1772{col 38}    1168.5
+    {txt}negative {c |}{res}{col 17}     17{col 26}       565{col 38}    1168.5
+        {txt}zero {c |}{res}{col 17}     12{col 26}        78{col 38}        78
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -3.25
+{txt}adjustment for zeros{col 22}{res}   -162.50
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27808.00
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  3.619
+{txt}{col 5}Prob > |z| = {res}  0.0003
+
+{txt}{hline}
+-> situation = 3
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     47{col 26}      2023{col 38}      1180
+    {txt}negative {c |}{res}{col 17}     12{col 26}       337{col 38}      1180
+        {txt}zero {c |}{res}{col 17}     10{col 26}        55{col 38}        55
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -7.50
+{txt}adjustment for zeros{col 22}{res}    -96.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27870.00
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  5.050
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 4
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     44{col 26}      1922{col 38}    1193.5
+    {txt}negative {c |}{res}{col 17}     18{col 26}       465{col 38}    1193.5
+        {txt}zero {c |}{res}{col 17}      7{col 26}        28{col 38}        28
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -6.88
+{txt}adjustment for zeros{col 22}{res}    -35.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27931.88
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  4.359
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 5
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     45{col 26}      1826{col 38}      1197
+    {txt}negative {c |}{res}{col 17}     18{col 26}       568{col 38}      1197
+        {txt}zero {c |}{res}{col 17}      6{col 26}        21{col 38}        21
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -3.75
+{txt}adjustment for zeros{col 22}{res}    -22.75
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27947.25
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  3.763
+{txt}{col 5}Prob > |z| = {res}  0.0002
+
+{txt}{hline}
+-> situation = 6
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     54{col 26}    2055.5{col 38}    1202.5
+    {txt}negative {c |}{res}{col 17}     11{col 26}     349.5{col 38}    1202.5
+        {txt}zero {c |}{res}{col 17}      4{col 26}        10{col 38}        10
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -3.50
+{txt}adjustment for zeros{col 22}{res}     -7.50
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27962.75
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  5.101
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 7
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     45{col 26}    1860.5{col 38}      1200
+    {txt}negative {c |}{res}{col 17}     19{col 26}     539.5{col 38}      1200
+        {txt}zero {c |}{res}{col 17}      5{col 26}        15{col 38}        15
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -2.75
+{txt}adjustment for zeros{col 22}{res}    -13.75
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27957.25
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  3.950
+{txt}{col 5}Prob > |z| = {res}  0.0001
+
+{txt}{hline}
+-> situation = 8
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     49{col 26}    2056.5{col 38}    1189.5
+    {txt}negative {c |}{res}{col 17}     12{col 26}     322.5{col 38}    1189.5
+        {txt}zero {c |}{res}{col 17}      8{col 26}        36{col 38}        36
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -4.00
+{txt}adjustment for zeros{col 22}{res}    -51.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27918.75
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  5.189
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 9
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     35{col 26}    1499.5{col 38}    1189.5
+    {txt}negative {c |}{res}{col 17}     26{col 26}     879.5{col 38}    1189.5
+        {txt}zero {c |}{res}{col 17}      8{col 26}        36{col 38}        36
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -4.38
+{txt}adjustment for zeros{col 22}{res}    -51.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27918.38
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  1.855
+{txt}{col 5}Prob > |z| = {res}  0.0636
+
+{txt}{hline}
+-> situation = 10
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     47{col 26}    1857.5{col 38}      1197
+    {txt}negative {c |}{res}{col 17}     16{col 26}     536.5{col 38}      1197
+        {txt}zero {c |}{res}{col 17}      6{col 26}        21{col 38}        21
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -4.88
+{txt}adjustment for zeros{col 22}{res}    -22.75
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27946.13
+
+{txt}Ho: IV_percent = 0
+{col 14}z = {res}  3.951
+{txt}{col 5}Prob > |z| = {res}  0.0001
+{txt}
+{com}. * Only in game 9, significance levels are > 0.01.
+. 
+. 
+. **********************************************************************************
+. * Do the expected values predict the certainty equivalents?
+. preserve
+{txt}
+{com}. rename offeracceptd offeraccept2
+{res}{txt}
+{com}. rename offeraccept offeraccept1
+{res}{txt}
+{com}. rename EV_control EV1
+{res}{txt}
+{com}. rename EV_deleg EV2
+{res}{txt}
+{com}. reshape long offeraccept EV, i(subject situation) j(delsit)
+{txt}(note: j = 1 2)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}     690   {txt}->{res}    1380
+{txt}Number of variables            {res}      46   {txt}->{res}      45
+{txt}j variable (2 values)                     ->   {res}delsit
+{txt}xij variables:
+              {res}offeraccept1 offeraccept2   {txt}->   {res}offeraccept
+                                EV1 EV2   {txt}->   {res}EV
+{txt}{hline 77}
+
+{com}. pwcorr offeraccept EV, sig
+
+             {txt}{c |} offera~t       EV
+{hline 13}{c +}{hline 18}
+ offeraccept {c |} {res}  1.0000 
+             {txt}{c |}
+             {c |}
+          EV {c |} {res}  0.8866   1.0000 
+             {txt}{c |}{res}   0.0000
+             {txt}{c |}
+
+{com}. * rho=0.89, p<0.001
+. restore
+{txt}
+{com}. 
+. // Correlation between the difference in expected value and the CE difference:
+. pwcorr EV_diff IV, sig
+
+             {txt}{c |}  EV_diff       IV
+{hline 13}{c +}{hline 18}
+     EV_diff {c |} {res}  1.0000 
+             {txt}{c |}
+             {c |}
+          IV {c |} {res}  0.5766   1.0000 
+             {txt}{c |}{res}   0.0000
+             {txt}{c |}
+
+{com}. * rho=0.58, p<0.001
+. 
+. **********************************************************************************
+. 
+. * Generate a percentage difference in EV for each game
+. gen ev_percent=EV_diff/EV_control
+{txt}
+{com}. egen mean_ev_percent=mean(ev_percent), by(subject)
+{txt}
+{com}. 
+. ttest mean_ev_percent=0 if situation==1
+
+{txt}One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+mean_e~t {c |}{res}{col 12}     69{col 22} .0714081{col 34} .0132852{col 46}  .110355{col 58} .0448979{col 70} .0979183
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}mean_ev_percent{txt})                                  t = {res}  5.3750
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+{txt}
+{com}. * The average difference is 7.1 percent.
+. 
+. 
+. * Test significance of the expected value differences:
+. * Calculate average expected value difference at the individual level, then test if average difference is equal to zero:
+. egen mean_EV_diff=mean(EV_diff), by(subject)
+{txt}
+{com}. signrank mean_EV_diff=0 if situation==1
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     57{col 26}      2071{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     12{col 26}       344{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}      0.00
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27973.75
+
+{txt}Ho: mean_EV_diff = 0 
+{col 14}z = {res}  5.163
+{txt}{col 5}Prob > |z| = {res}  0.0000
+{txt}
+{com}. 
+. dis 57/69
+{res}.82608696
+{txt}
+{com}. // 82.6% have on average a positive EV Difference (p<0.001 signed rank test)
+. 
+. * Tests for each individual game:
+. bysort situation: signrank ev_percent=0
+
+{txt}{hline}
+-> situation = 1
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     48{col 26}    1627.5{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     21{col 26}     787.5{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -2.13
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27971.63
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  2.511
+{txt}{col 5}Prob > |z| = {res}  0.0120
+
+{txt}{hline}
+-> situation = 2
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     52{col 26}      1727{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     16{col 26}       687{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.25
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27972.25
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  3.109
+{txt}{col 5}Prob > |z| = {res}  0.0019
+
+{txt}{hline}
+-> situation = 3
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     55{col 26}    1989.5{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     13{col 26}     424.5{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -7.38
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27966.13
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  4.679
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 4
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     49{col 26}      1722{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     19{col 26}       692{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.75
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27971.75
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  3.079
+{txt}{col 5}Prob > |z| = {res}  0.0021
+
+{txt}{hline}
+-> situation = 5
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     42{col 26}    1321.5{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     27{col 26}    1093.5{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -3.88
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27969.88
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  0.682
+{txt}{col 5}Prob > |z| = {res}  0.4955
+
+{txt}{hline}
+-> situation = 6
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     56{col 26}      2048{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     13{col 26}       367{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.13
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27972.63
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  5.025
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 7
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     58{col 26}      2121{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     11{col 26}       294{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -0.75
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27973.00
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  5.462
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 8
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     56{col 26}    2104.5{col 38}    1207.5
+    {txt}negative {c |}{res}{col 17}     13{col 26}     310.5{col 38}    1207.5
+        {txt}zero {c |}{res}{col 17}      0{col 26}         0{col 38}         0
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -3.00
+{txt}adjustment for zeros{col 22}{res}      0.00
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27970.75
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  5.363
+{txt}{col 5}Prob > |z| = {res}  0.0000
+
+{txt}{hline}
+-> situation = 9
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     42{col 26}    1527.5{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     26{col 26}     886.5{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -0.88
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27972.63
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  1.916
+{txt}{col 5}Prob > |z| = {res}  0.0553
+
+{txt}{hline}
+-> situation = 10
+
+Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     47{col 26}      1663{col 38}      1206
+    {txt}negative {c |}{res}{col 17}     20{col 26}       749{col 38}      1206
+        {txt}zero {c |}{res}{col 17}      2{col 26}         3{col 38}         3
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -6.00
+{txt}adjustment for zeros{col 22}{res}     -1.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27966.50
+
+{txt}Ho: ev_percent = 0
+{col 14}z = {res}  2.733
+{txt}{col 5}Prob > |z| = {res}  0.0063
+{txt}
+{com}. bysort situation: ttest ev_percent=0
+
+{txt}{hline}
+-> situation = 1
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0550307{col 34} .0228275{col 46} .1896194{col 58} .0094792{col 70} .1005823
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  2.4107
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9907         {txt}Pr(|T| > |t|) = {res}0.0186          {txt}Pr(T > t) = {res}0.0093
+
+{txt}{hline}
+-> situation = 2
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0460546{col 34} .0210376{col 46} .1747516{col 58} .0040747{col 70} .0880345
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  2.1892
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9840         {txt}Pr(|T| > |t|) = {res}0.0320          {txt}Pr(T > t) = {res}0.0160
+
+{txt}{hline}
+-> situation = 3
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0693978{col 34} .0134272{col 46} .1115343{col 58} .0426044{col 70} .0961913
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  5.1685
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 4
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0323868{col 34} .0131861{col 46} .1095319{col 58} .0060743{col 70} .0586992
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  2.4561
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9917         {txt}Pr(|T| > |t|) = {res}0.0166          {txt}Pr(T > t) = {res}0.0083
+
+{txt}{hline}
+-> situation = 5
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0365761{col 34} .0358932{col 46} .2981514{col 58}-.0350477{col 70} .1081999
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  1.0190
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.8441         {txt}Pr(|T| > |t|) = {res}0.3118          {txt}Pr(T > t) = {res}0.1559
+
+{txt}{hline}
+-> situation = 6
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .1471862{col 34} .0235453{col 46} .1955821{col 58} .1002022{col 70} .1941701
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  6.2512
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 7
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .1156698{col 34} .0197593{col 46} .1641328{col 58} .0762408{col 70} .1550988
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  5.8540
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 8
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0909118{col 34} .0144911{col 46} .1203724{col 58} .0619952{col 70} .1198284
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  6.2736
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}1.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}0.0000
+
+{txt}{hline}
+-> situation = 9
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22}  .023521{col 34} .0137695{col 46} .1143782{col 58}-.0039557{col 70} .0509976
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  1.7082
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9539         {txt}Pr(|T| > |t|) = {res}0.0922          {txt}Pr(T > t) = {res}0.0461
+
+{txt}{hline}
+-> situation = 10
+
+One-sample t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+ev_per~t {c |}{res}{col 12}     69{col 22} .0973462{col 34} .0376885{col 46} .3130642{col 58}   .02214{col 70} .1725525
+{txt}{hline 9}{c BT}{hline 68}
+    mean = mean({res}ev_percent{txt})                                       t = {res}  2.5829
+{txt}Ho: mean = {res}0                                     {txt}degrees of freedom = {res}      68
+
+    {txt}Ha: mean < {res}0                 {txt}Ha: mean != {res}0                 {txt}Ha: mean > {res}0
+ {txt}Pr(T < t) = {res}0.9940         {txt}Pr(|T| > |t|) = {res}0.0120          {txt}Pr(T > t) = {res}0.0060
+{txt}
+{com}. * Significant in all games at the 5% level except game 9 (10 % level) and game 5 (not significant)
+. 
+. 
+. 
+. 
+. ********************************************************************
+. *** Consistency of the Measure accross games (Cronbach Alpha): 
+. 
+. preserve
+{txt}
+{com}. keep subject situation ev_percent IV_percent
+{txt}
+{com}. reshape wide ev_percent IV_percent, i(subject) j(situation)
+{txt}(note: j = 1 2 3 4 5 6 7 8 9 10)
+
+Data{col 36}long{col 43}->{col 48}wide
+{hline 77}
+Number of obs.                 {res}     690   {txt}->{res}      69
+{txt}Number of variables            {res}       4   {txt}->{res}      21
+{txt}j variable (10 values)        {res}situation   {txt}->   (dropped)
+xij variables:
+                             {res}ev_percent   {txt}->   {res}ev_percent1 ev_percent2 ... ev_percent10
+                             IV_percent   {txt}->   {res}IV_percent1 IV_percent2 ... IV_percent10
+{txt}{hline 77}
+
+{com}. alpha  IV_percent1 IV_percent2 IV_percent3 IV_percent4 IV_percent5 IV_percent6 IV_percent7 IV_percent8 IV_percent9 IV_percent10
+
+{txt}Test scale = mean(unstandardized items)
+
+Average interitem covariance:{col 34}{res} .0151438
+{txt}Number of items in the scale:{col 34}{res}       10
+{txt}Scale reliability coefficient:{col 34}{res}   0.6224
+{txt}
+{com}. alpha  ev_percent1 ev_percent2 ev_percent3 ev_percent4 ev_percent5 ev_percent6 ev_percent7 ev_percent8 ev_percent9 ev_percent10
+
+{txt}Test scale = mean(unstandardized items)
+
+Average interitem covariance:{col 34}{res} .0094136
+{txt}Number of items in the scale:{col 34}{res}       10
+{txt}Scale reliability coefficient:{col 34}{res}   0.7730
+{txt}
+{com}. restore
+{txt}
+{com}. * alpha= 0.62 for IV
+. * alpha= 0.77 for ev
+. 
+. *******************************************************************
+. * Section 4.2: Situational Determinants:
+. 
+. egen IV_stakemean=mean(IV), by(subject stakesize)
+{txt}
+{com}. egen IV_conflictmean=mean(IV), by(subject conflict)
+{txt}
+{com}. *paired t-tests:
+. preserve
+{txt}
+{com}. replace conflict=50 if conflict==0.5
+{txt}(276 real changes made)
+
+{com}. replace conflict=75 if conflict==0.75
+{txt}(276 real changes made)
+
+{com}. replace conflict=100 if conflict==1
+{txt}(138 real changes made)
+
+{com}. 
+. keep if situation==1 | situation==3 | situation==10
+{txt}(483 observations deleted)
+
+{com}. keep IV_stakemean IV_conflictmean subject conflict
+{txt}
+{com}. reshape wide IV_stakemean IV_conflictmean, i(subject) j(conflict)
+{txt}(note: j = 50 75 100)
+
+Data{col 36}long{col 43}->{col 48}wide
+{hline 77}
+Number of obs.                 {res}     207   {txt}->{res}      69
+{txt}Number of variables            {res}       4   {txt}->{res}       7
+{txt}j variable (3 values)          {res}conflict   {txt}->   (dropped)
+xij variables:
+                           {res}IV_stakemean   {txt}->   {res}IV_stakemean50 IV_stakemean75 IV_stakemean100
+                        IV_conflictmean   {txt}->   {res}IV_conflictmean50 IV_conflictmean75 IV_conflictmean100
+{txt}{hline 77}
+
+{com}. 
+. * Testing whether importance has an impact:
+. ttest IV_stakemean50=IV_stakemean100
+
+{txt}Paired t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_st~50 {c |}{res}{col 12}     69{col 22} 15.76522{col 34} 2.025565{col 46} 16.82561{col 58} 11.72326{col 70} 19.80717
+{txt}IV_s~100 {c |}{res}{col 12}     69{col 22}  34.4029{col 34} 4.912608{col 46} 40.80719{col 58} 24.59994{col 70} 44.20586
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 12}     69{col 22}-18.63768{col 34} 4.082433{col 46} 33.91124{col 58}-26.78405{col 70}-10.49131
+{txt}{hline 9}{c BT}{hline 68}
+     mean(diff) = mean({res}IV_stakemean50{txt} - {res}IV_stakemean100{txt})          t = {res} -4.5653
+{txt} Ho: mean(diff) = 0                              degrees of freedom = {res}      68
+
+ {txt}Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = {res}0.0000         {txt}Pr(|T| > |t|) = {res}0.0000          {txt}Pr(T > t) = {res}1.0000
+{txt}
+{com}. * Difference: 18.9 points. p=0.0001
+. signrank IV_stakemean50=IV_stakemean100
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     16{col 26}       502{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     52{col 26}      1912{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.13
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27972.38
+
+{txt}Ho: IV_stakemean50 = IV_stakemean100
+{col 14}z = {res} -4.215
+{txt}{col 5}Prob > |z| = {res}  0.0000
+{txt}
+{com}. dis 40/52
+{res}.76923077
+{txt}
+{com}. * 77% have higher WTPs in high importance. p-value signed rank test: 0.0001
+. 
+. ttest IV_conflictmean50=IV_conflictmean75
+
+{txt}Paired t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_co~50 {c |}{res}{col 12}     69{col 22} 14.93478{col 34} 2.732485{col 46} 22.69773{col 58} 9.482193{col 70} 20.38737
+{txt}IV_co~75 {c |}{res}{col 12}     69{col 22} 28.62681{col 34} 4.339418{col 46} 36.04592{col 58} 19.96764{col 70} 37.28599
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 12}     69{col 22}-13.69203{col 34} 3.839855{col 46} 31.89623{col 58}-21.35434{col 70}-6.029717
+{txt}{hline 9}{c BT}{hline 68}
+     mean(diff) = mean({res}IV_conflictme~50{txt} - {res}IV_conflictme~75{txt})       t = {res} -3.5658
+{txt} Ho: mean(diff) = 0                              degrees of freedom = {res}      68
+
+ {txt}Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = {res}0.0003         {txt}Pr(|T| > |t|) = {res}0.0007          {txt}Pr(T > t) = {res}0.9997
+{txt}
+{com}. * Difference from 0.5 to 0.75: 11.1. p=0.02
+. signrank IV_conflictmean50=IV_conflictmean75 
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     18{col 26}       650{col 38}      1206
+    {txt}negative {c |}{res}{col 17}     49{col 26}      1762{col 38}      1206
+        {txt}zero {c |}{res}{col 17}      2{col 26}         3{col 38}         3
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.63
+{txt}adjustment for zeros{col 22}{res}     -1.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27970.88
+
+{txt}Ho: IV_conflictmean50 = IV_conflictmean75
+{col 14}z = {res} -3.324
+{txt}{col 5}Prob > |z| = {res}  0.0009
+{txt}
+{com}. dis 34/52
+{res}.65384615
+{txt}
+{com}. * 65% have higher WTP as alignment increases from 0.5 to 0.75. p-value signed rank test: 0.03
+. 
+. ttest IV_conflictmean50=IV_conflictmean100
+
+{txt}Paired t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_co~50 {c |}{res}{col 12}     69{col 22} 14.93478{col 34} 2.732485{col 46} 22.69773{col 58} 9.482193{col 70} 20.38737
+{txt}IV_c~100 {c |}{res}{col 12}     69{col 22}  38.2971{col 34} 8.218869{col 46} 68.27105{col 58}  21.8966{col 70}  54.6976
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 12}     69{col 22}-23.36232{col 34} 8.369147{col 46} 69.51935{col 58}-40.06269{col 70}-6.661947
+{txt}{hline 9}{c BT}{hline 68}
+     mean(diff) = mean({res}IV_conflictme~50{txt} - {res}IV_conflictm~100{txt})       t = {res} -2.7915
+{txt} Ho: mean(diff) = 0                              degrees of freedom = {res}      68
+
+ {txt}Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = {res}0.0034         {txt}Pr(|T| > |t|) = {res}0.0068          {txt}Pr(T > t) = {res}0.9966
+{txt}
+{com}. * Difference from 0.5 to 0.75: 18.4 p=0.086
+. signrank IV_conflictmean50=IV_conflictmean100 
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     25{col 26}     744.5{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     43{col 26}    1669.5{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -2.13
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27971.38
+
+{txt}Ho: IV_conflictmean50 = IV_conflictmean100
+{col 14}z = {res} -2.765
+{txt}{col 5}Prob > |z| = {res}  0.0057
+{txt}
+{com}. dis 31/52
+{res}.59615385
+{txt}
+{com}. * 60% have higher WTP as alignment increases from 0.5 to 1. p-value signed rank test: 0.081
+. 
+. ttest IV_conflictmean75=IV_conflictmean100
+
+{txt}Paired t test
+{hline 9}{c TT}{hline 68}
+Variable{col 10}{c |}{col 16}Obs{col 27}Mean{col 35}Std. Err.{col 47}Std. Dev.{col 59}[95% Conf. Interval]
+{hline 9}{c +}{hline 68}
+IV_co~75 {c |}{res}{col 12}     69{col 22} 28.62681{col 34} 4.339418{col 46} 36.04592{col 58} 19.96764{col 70} 37.28599
+{txt}IV_c~100 {c |}{res}{col 12}     69{col 22}  38.2971{col 34} 8.218869{col 46} 68.27105{col 58}  21.8966{col 70}  54.6976
+{txt}{hline 9}{c +}{hline 68}
+    diff {c |}{res}{col 12}     69{col 22} -9.67029{col 34} 8.742492{col 46}  72.6206{col 58}-27.11566{col 70} 7.775082
+{txt}{hline 9}{c BT}{hline 68}
+     mean(diff) = mean({res}IV_conflictme~75{txt} - {res}IV_conflictm~100{txt})       t = {res} -1.1061
+{txt} Ho: mean(diff) = 0                              degrees of freedom = {res}      68
+
+ {txt}Ha: mean(diff) < 0           Ha: mean(diff) != 0           Ha: mean(diff) > 0
+ Pr(T < t) = {res}0.1363         {txt}Pr(|T| > |t|) = {res}0.2726          {txt}Pr(T > t) = {res}0.8637
+{txt}
+{com}. * Difference from 0.75 to 1: 7.3 p=0.51
+. signrank IV_conflictmean75=IV_conflictmean100 
+
+{txt}Wilcoxon signed-rank test
+
+        sign {c |}      obs   sum ranks    expected
+{hline 13}{c +}{hline 33}
+    positive {c |}{res}{col 17}     28{col 26}    1022.5{col 38}      1207
+    {txt}negative {c |}{res}{col 17}     40{col 26}    1391.5{col 38}      1207
+        {txt}zero {c |}{res}{col 17}      1{col 26}         1{col 38}         1
+{txt}{hline 13}{c +}{hline 33}
+         all {c |}{res}{col 17}     69{col 26}      2415{col 38}      2415
+
+{txt}unadjusted variance{col 22}{res}  27973.75
+{txt}adjustment for ties{col 22}{res}     -1.63
+{txt}adjustment for zeros{col 22}{res}     -0.25
+{txt}{col 22}{hline 10}
+adjusted variance{col 22}{res}  27971.88
+
+{txt}Ho: IV_conflictmean75 = IV_conflictmean100
+{col 14}z = {res} -1.103
+{txt}{col 5}Prob > |z| = {res}  0.2700
+{txt}
+{com}. dis 29/52
+{res}.55769231
+{txt}
+{com}. * 56% have higher WTP as alignment increases from 0.75 to 1. p-value signed rank test: 0.56
+. 
+. restore
+{txt}
+{com}. 
+. **********************************************************************************
+. * Section 5: Alternative Explanations
+. 
+. **********************************************************************************
+. * 5.1 Loss Aversion:
+. 
+. * pwcorr mean_WTP_percent lossaversion if situation==1, sig
+.  pwcorr mean_IV lossaversion if situation==1, sig
+
+             {txt}{c |}  mean_IV lossav~n
+{hline 13}{c +}{hline 18}
+     mean_IV {c |} {res}  1.0000 
+             {txt}{c |}
+             {c |}
+lossaversion {c |} {res}  0.0292   1.0000 
+             {txt}{c |}{res}   0.8118
+             {txt}{c |}
+
+{com}. * Correlation is rho=0.03. sig:0.81
+. 
+. /// Controlling for Consistency (footnote 29):
+> 
+.  pwcorr mean_IV lossaversion if situation==1 & consistent==1, sig
+
+             {txt}{c |}  mean_IV lossav~n
+{hline 13}{c +}{hline 18}
+     mean_IV {c |} {res}  1.0000 
+             {txt}{c |}
+             {c |}
+lossaversion {c |} {res}  0.0653   1.0000 
+             {txt}{c |}{res}   0.5969
+             {txt}{c |}
+
+{com}. * Correlation is rho=0.065. sig: 0.6
+. 
+. **********************************************************************************
+. * 5.2 Illusion of Control:
+. 
+. tab ioc
+
+        {txt}IoC {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          0 {c |}{res}        630       91.30       91.30
+{txt}          2 {c |}{res}         10        1.45       92.75
+{txt}          3 {c |}{res}         10        1.45       94.20
+{txt}          4 {c |}{res}         10        1.45       95.65
+{txt}         10 {c |}{res}         10        1.45       97.10
+{txt}         12 {c |}{res}         10        1.45       98.55
+{txt}         17 {c |}{res}         10        1.45      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}        690      100.00
+{txt}
+{com}. * 91.5% have 0 willingness to pay to roll the dice.
+.  pwcorr mean_IV ioc if situation==1, sig
+
+             {txt}{c |}  mean_IV      ioc
+{hline 13}{c +}{hline 18}
+     mean_IV {c |} {res}  1.0000 
+             {txt}{c |}
+             {c |}
+         ioc {c |} {res} -0.0450   1.0000 
+             {txt}{c |}{res}   0.7134
+             {txt}{c |}
+
+{com}. * Correlation is rho=-0.045. sig: 0.71
+. 
+. **********************************************************************************
+. *5.3 Preference Reversals:
+. 
+. gen pay_control_success=va-cost
+{txt}
+{com}. gen pay_delegation_success=vc
+{txt}
+{com}. 
+. count if pay_control_success>pay_delegation_success
+{res}  342
+{txt}
+{com}. dis 342/690
+{res}.49565217
+{txt}
+{com}. count if pay_control_success<pay_delegation_success
+{res}  342
+{txt}
+{com}. count if pay_control_success==pay_delegation_success
+{res}    6
+{txt}
+{com}. dis 6/690
+{res}.00869565
+{txt}
+{com}. * In 49.56% of the cases, the success payment at the control lottery is larger than at the delegation lottery.
+. * In 49.56% of the cases, the success payment at the control lottery is smaller than at the delegation lottery.
+. * In 0.87% of the cases, the payments are equal.
+. 
+. 
+. * Average success probabilities:
+. 
+. sum peffort mae
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 5}peffort {c |}{res}       690    60.01739    23.70396          0        100
+{txt}{space 9}mae {c |}{res}       690    51.11739    29.25836          1        100
+{txt}
+{com}. * 60% average success probability in control lotteries.
+. * 51% average success probability in delegation lotteries.
+. 
+. count if peffort>mae
+{res}  339
+{txt}
+{com}. count if peffort<mae
+{res}  272
+{txt}
+{com}. count if peffort==mae
+{res}   79
+{txt}
+{com}. dis 339/690 // 49.1% larger success probability at control lottery.
+{res}.49130435
+{txt}
+{com}. dis 272/690 // 39.4% larger success probability at delegation lottery.
+{res}.3942029
+{txt}
+{com}. dis 79/690 // 11.4      % equal success probabilities.
+{res}.11449275
+{txt}
+{com}. 
+. **********************************************************************************
+. * 5.4: Reciprocity
+. 
+. xtset subject
+{txt}{col 8}panel variable:  {res}subject (balanced)
+{txt}
+{com}. xi: xtreg IV_percent mae i.situation, cluster(subject) fe
+{txt}i.situation{col 19}_Isituation_1-10{col 39}(naturally coded; _Isituation_1 omitted)
+
+Fixed-effects (within) regression               Number of obs      = {res}      690
+{txt}Group variable: {res}subject                         {txt}Number of groups   = {res}       69
+
+{txt}R-sq:  within  = {res}0.1442                         {txt}Obs per group: min = {res}       10
+{txt}       between = {res}0.1802                                        {txt}avg = {res}     10.0
+{txt}       overall = {res}0.1503                                        {txt}max = {res}       10
+
+                                                {txt}F({res}10{txt},{res}68{txt})           = {res}    22.21
+{txt}corr(u_i, Xb)  = {res}-0.0747                        {txt}Prob > F           =    {res}0.0000
+
+{txt}{ralign 80:(Std. Err. adjusted for {res:69} clusters in subject)}
+{hline 15}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 16}{c |}{col 28}    Robust
+{col 1}    IV_percent{col 16}{c |}      Coef.{col 28}   Std. Err.{col 40}      t{col 48}   P>|t|{col 56}     [95% Con{col 69}f. Interval]
+{hline 15}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 11}mae {c |}{col 16}{res}{space 2} .0045692{col 28}{space 2} .0005946{col 39}{space 1}    7.68{col 48}{space 3}0.000{col 56}{space 4} .0033827{col 69}{space 3} .0057556
+{txt}{space 1}_Isituation_2 {c |}{col 16}{res}{space 2}-.0746532{col 28}{space 2} .0396276{col 39}{space 1}   -1.88{col 48}{space 3}0.064{col 56}{space 4}-.1537289{col 69}{space 3} .0044225
+{txt}{space 1}_Isituation_3 {c |}{col 16}{res}{space 2}-.0116459{col 28}{space 2} .0451172{col 39}{space 1}   -0.26{col 48}{space 3}0.797{col 56}{space 4}-.1016757{col 69}{space 3}  .078384
+{txt}{space 1}_Isituation_4 {c |}{col 16}{res}{space 2}-.1545469{col 28}{space 2}  .025529{col 39}{space 1}   -6.05{col 48}{space 3}0.000{col 56}{space 4}-.2054893{col 69}{space 3}-.1036045
+{txt}{space 1}_Isituation_5 {c |}{col 16}{res}{space 2}  .036264{col 28}{space 2}   .05119{col 39}{space 1}    0.71{col 48}{space 3}0.481{col 56}{space 4}-.0658841{col 69}{space 3} .1384121
+{txt}{space 1}_Isituation_6 {c |}{col 16}{res}{space 2}-.0068723{col 28}{space 2} .0571068{col 39}{space 1}   -0.12{col 48}{space 3}0.905{col 56}{space 4}-.1208271{col 69}{space 3} .1070825
+{txt}{space 1}_Isituation_7 {c |}{col 16}{res}{space 2}-.1409501{col 28}{space 2} .0365629{col 39}{space 1}   -3.86{col 48}{space 3}0.000{col 56}{space 4}-.2139103{col 69}{space 3}  -.06799
+{txt}{space 1}_Isituation_8 {c |}{col 16}{res}{space 2}-.0337565{col 28}{space 2}  .029929{col 39}{space 1}   -1.13{col 48}{space 3}0.263{col 56}{space 4}-.0934788{col 69}{space 3} .0259659
+{txt}{space 1}_Isituation_9 {c |}{col 16}{res}{space 2}-.1858231{col 28}{space 2} .0352104{col 39}{space 1}   -5.28{col 48}{space 3}0.000{col 56}{space 4}-.2560842{col 69}{space 3}-.1155619
+{txt}_Isituation_10 {c |}{col 16}{res}{space 2} .0713677{col 28}{space 2} .0611399{col 39}{space 1}    1.17{col 48}{space 3}0.247{col 56}{space 4} -.050635{col 69}{space 3} .1933704
+{txt}{space 9}_cons {c |}{col 16}{res}{space 2}-.0165801{col 28}{space 2} .0358448{col 39}{space 1}   -0.46{col 48}{space 3}0.645{col 56}{space 4}-.0881073{col 69}{space 3} .0549472
+{txt}{hline 15}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+       sigma_u {c |} {res}  .1423316
+       {txt}sigma_e {c |} {res}  .2855981
+           {txt}rho {c |} {res} .19895284{txt}   (fraction of variance due to u_i)
+{hline 15}{c BT}{hline 64}
+
+{com}. 
+. * 5.5 Corner Solutions:
+. 
+. tab mae
+
+        {txt}mae {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}        109       15.80       15.80
+{txt}          2 {c |}{res}          4        0.58       16.38
+{txt}          3 {c |}{res}          1        0.14       16.52
+{txt}         10 {c |}{res}         14        2.03       18.55
+{txt}         11 {c |}{res}          1        0.14       18.70
+{txt}         12 {c |}{res}          1        0.14       18.84
+{txt}         15 {c |}{res}          3        0.43       19.28
+{txt}         20 {c |}{res}         14        2.03       21.30
+{txt}         22 {c |}{res}          1        0.14       21.45
+{txt}         23 {c |}{res}          1        0.14       21.59
+{txt}         24 {c |}{res}          1        0.14       21.74
+{txt}         25 {c |}{res}          1        0.14       21.88
+{txt}         26 {c |}{res}          2        0.29       22.17
+{txt}         30 {c |}{res}         16        2.32       24.49
+{txt}         31 {c |}{res}         11        1.59       26.09
+{txt}         32 {c |}{res}          2        0.29       26.38
+{txt}         33 {c |}{res}          1        0.14       26.52
+{txt}         35 {c |}{res}          5        0.72       27.25
+{txt}         37 {c |}{res}          1        0.14       27.39
+{txt}         39 {c |}{res}          1        0.14       27.54
+{txt}         40 {c |}{res}         25        3.62       31.16
+{txt}         41 {c |}{res}          1        0.14       31.30
+{txt}         42 {c |}{res}          1        0.14       31.45
+{txt}         44 {c |}{res}          1        0.14       31.59
+{txt}         45 {c |}{res}         12        1.74       33.33
+{txt}         46 {c |}{res}          3        0.43       33.77
+{txt}         47 {c |}{res}          4        0.58       34.35
+{txt}         48 {c |}{res}          3        0.43       34.78
+{txt}         49 {c |}{res}         16        2.32       37.10
+{txt}         50 {c |}{res}         54        7.83       44.93
+{txt}         51 {c |}{res}          7        1.01       45.94
+{txt}         52 {c |}{res}          2        0.29       46.23
+{txt}         54 {c |}{res}          7        1.01       47.25
+{txt}         55 {c |}{res}         18        2.61       49.86
+{txt}         56 {c |}{res}          5        0.72       50.58
+{txt}         57 {c |}{res}          1        0.14       50.72
+{txt}         58 {c |}{res}          3        0.43       51.16
+{txt}         60 {c |}{res}         37        5.36       56.52
+{txt}         61 {c |}{res}          1        0.14       56.67
+{txt}         63 {c |}{res}          8        1.16       57.83
+{txt}         64 {c |}{res}          9        1.30       59.13
+{txt}         65 {c |}{res}         14        2.03       61.16
+{txt}         66 {c |}{res}          4        0.58       61.74
+{txt}         67 {c |}{res}          8        1.16       62.90
+{txt}         68 {c |}{res}          9        1.30       64.20
+{txt}         69 {c |}{res}          3        0.43       64.64
+{txt}         70 {c |}{res}         54        7.83       72.46
+{txt}         71 {c |}{res}          6        0.87       73.33
+{txt}         72 {c |}{res}          3        0.43       73.77
+{txt}         73 {c |}{res}          1        0.14       73.91
+{txt}         74 {c |}{res}          4        0.58       74.49
+{txt}         75 {c |}{res}         29        4.20       78.70
+{txt}         76 {c |}{res}          7        1.01       79.71
+{txt}         77 {c |}{res}          7        1.01       80.72
+{txt}         78 {c |}{res}         14        2.03       82.75
+{txt}         79 {c |}{res}          4        0.58       83.33
+{txt}         80 {c |}{res}         41        5.94       89.28
+{txt}         81 {c |}{res}          2        0.29       89.57
+{txt}         83 {c |}{res}          1        0.14       89.71
+{txt}         84 {c |}{res}          2        0.29       90.00
+{txt}         85 {c |}{res}         13        1.88       91.88
+{txt}         86 {c |}{res}          1        0.14       92.03
+{txt}         88 {c |}{res}          1        0.14       92.17
+{txt}         89 {c |}{res}          4        0.58       92.75
+{txt}         90 {c |}{res}         21        3.04       95.80
+{txt}         91 {c |}{res}          2        0.29       96.09
+{txt}         93 {c |}{res}          3        0.43       96.52
+{txt}         95 {c |}{res}          2        0.29       96.81
+{txt}         96 {c |}{res}          1        0.14       96.96
+{txt}         97 {c |}{res}          2        0.29       97.25
+{txt}         98 {c |}{res}          1        0.14       97.39
+{txt}         99 {c |}{res}          5        0.72       98.12
+{txt}        100 {c |}{res}         13        1.88      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}        690      100.00
+{txt}
+{com}. * 15.8% of observations at mae==1.
+. * 1.9% of observations at mae==100.
+. 
+. * How often is mae==1 chosen by subject?
+. gen mae1=.
+{txt}(690 missing values generated)
+
+{com}. replace mae1=1 if mae==1
+{txt}(109 real changes made)
+
+{com}. egen mae1count=count(mae1), by(subject)
+{txt}
+{com}. tab mae1count if situation==1
+
+  {txt}mae1count {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          0 {c |}{res}         35       50.72       50.72
+{txt}          1 {c |}{res}          8       11.59       62.32
+{txt}          2 {c |}{res}         10       14.49       76.81
+{txt}          3 {c |}{res}          6        8.70       85.51
+{txt}          4 {c |}{res}          4        5.80       91.30
+{txt}          5 {c |}{res}          2        2.90       94.20
+{txt}          8 {c |}{res}          1        1.45       95.65
+{txt}          9 {c |}{res}          1        1.45       97.10
+{txt}         10 {c |}{res}          2        2.90      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}         69      100.00
+{txt}
+{com}. * 51% never chose mae==1
+. * 77% chose mae==1 twice at most.
+. 
+. **********************
+. * Sign Test on how often a positive value and how often a negative value was assigned by each subject:
+. 
+. * Indicator for positive intrinsic value:
+. gen pos=.
+{txt}(690 missing values generated)
+
+{com}. replace pos=1 if IV>0 & mae!=1
+{txt}(409 real changes made)
+
+{com}. * Number of assigned positive intrinsic values by subject:
+. egen poscount=count(pos), by(subject)
+{txt}
+{com}. 
+. * Indicator for negative intrinsic value:
+. gen neg=.
+{txt}(690 missing values generated)
+
+{com}. replace neg=1 if IV<0
+{txt}(159 real changes made)
+
+{com}. replace neg=1 if mae==1
+{txt}(72 real changes made)
+
+{com}. * Number of assigned negative intrinsic values by subject:
+. egen negcount=count(neg), by(subject)
+{txt}
+{com}. 
+. * Signtest whether number if positive and negative intrinsic value assignments are equal:
+. signtest poscount=negcount if situation==1
+
+{txt}Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        49{col 29}      31.5
+    {txt}negative {c |}{res}{col 17}        14{col 29}      31.5
+        {txt}zero {c |}{res}{col 17}         6{col 29}         6
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of poscount - negcount  = 0 vs.
+  Ha: median of poscount - negcount  > 0
+      Pr(#positive >= {res}49{txt}) =
+         Binomial(n = {res}63{txt}, x >= {res}49{txt}, p = 0.5) = {res} 0.0000
+
+{txt}  Ho: median of poscount - negcount  = 0 vs.
+  Ha: median of poscount - negcount  < 0
+      Pr(#negative >= {res}14{txt}) =
+         Binomial(n = {res}63{txt}, x >= {res}14{txt}, p = 0.5) = {res} 1.0000
+
+{txt}Two-sided test:
+  Ho: median of poscount - negcount  = 0 vs.
+  Ha: median of poscount - negcount  != 0
+      Pr(#positive >= {res}49{txt} or #negative >= {res}49{txt}) =
+         min(1, 2*Binomial(n = {res}63{txt}, x >= {res}49{txt}, p = 0.5)) = {res} 0.0000
+{txt}
+{com}. * 49 subjects assign a positive value more often.
+. * 14 assign a negative value more often
+. * 6 assign an equal number of positive and negative values.
+. * Sign Test is significant at the p>0.001 level.
+. 
+. *Recoding MAE==1 Corner Solutions as negative IV to conduct individual test for each game:
+. preserve
+{txt}
+{com}. replace IV=-1 if mae==1
+{txt}(109 real changes made)
+
+{com}. * Signtest for each game:
+. bysort situation: signtest IV=0
+
+{txt}{hline}
+-> situation = 1
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        44{col 29}      32.5
+    {txt}negative {c |}{res}{col 17}        21{col 29}      32.5
+        {txt}zero {c |}{res}{col 17}         4{col 29}         4
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}44{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}44{txt}, p = 0.5) = {res} 0.0030
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}21{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}21{txt}, p = 0.5) = {res} 0.9987
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}44{txt} or #negative >= {res}44{txt}) =
+         min(1, 2*Binomial(n = {res}65{txt}, x >= {res}44{txt}, p = 0.5)) = {res} 0.0059
+
+{txt}{hline}
+-> situation = 2
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        38{col 29}        29
+    {txt}negative {c |}{res}{col 17}        20{col 29}        29
+        {txt}zero {c |}{res}{col 17}        11{col 29}        11
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}38{txt}) =
+         Binomial(n = {res}58{txt}, x >= {res}38{txt}, p = 0.5) = {res} 0.0124
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}20{txt}) =
+         Binomial(n = {res}58{txt}, x >= {res}20{txt}, p = 0.5) = {res} 0.9940
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}38{txt} or #negative >= {res}38{txt}) =
+         min(1, 2*Binomial(n = {res}58{txt}, x >= {res}38{txt}, p = 0.5)) = {res} 0.0247
+
+{txt}{hline}
+-> situation = 3
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        42{col 29}        32
+    {txt}negative {c |}{res}{col 17}        22{col 29}        32
+        {txt}zero {c |}{res}{col 17}         5{col 29}         5
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}42{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}42{txt}, p = 0.5) = {res} 0.0084
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}22{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}22{txt}, p = 0.5) = {res} 0.9959
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}42{txt} or #negative >= {res}42{txt}) =
+         min(1, 2*Binomial(n = {res}64{txt}, x >= {res}42{txt}, p = 0.5)) = {res} 0.0169
+
+{txt}{hline}
+-> situation = 4
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        41{col 29}      32.5
+    {txt}negative {c |}{res}{col 17}        24{col 29}      32.5
+        {txt}zero {c |}{res}{col 17}         4{col 29}         4
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}41{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}41{txt}, p = 0.5) = {res} 0.0232
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}24{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}24{txt}, p = 0.5) = {res} 0.9876
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}41{txt} or #negative >= {res}41{txt}) =
+         min(1, 2*Binomial(n = {res}65{txt}, x >= {res}41{txt}, p = 0.5)) = {res} 0.0464
+
+{txt}{hline}
+-> situation = 5
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        35{col 29}      33.5
+    {txt}negative {c |}{res}{col 17}        32{col 29}      33.5
+        {txt}zero {c |}{res}{col 17}         2{col 29}         2
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}35{txt}) =
+         Binomial(n = {res}67{txt}, x >= {res}35{txt}, p = 0.5) = {res} 0.4036
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}32{txt}) =
+         Binomial(n = {res}67{txt}, x >= {res}32{txt}, p = 0.5) = {res} 0.6873
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}35{txt} or #negative >= {res}35{txt}) =
+         min(1, 2*Binomial(n = {res}67{txt}, x >= {res}35{txt}, p = 0.5)) = {res} 0.8072
+
+{txt}{hline}
+-> situation = 6
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        49{col 29}        33
+    {txt}negative {c |}{res}{col 17}        17{col 29}        33
+        {txt}zero {c |}{res}{col 17}         3{col 29}         3
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}49{txt}) =
+         Binomial(n = {res}66{txt}, x >= {res}49{txt}, p = 0.5) = {res} 0.0001
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}17{txt}) =
+         Binomial(n = {res}66{txt}, x >= {res}17{txt}, p = 0.5) = {res} 1.0000
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}49{txt} or #negative >= {res}49{txt}) =
+         min(1, 2*Binomial(n = {res}66{txt}, x >= {res}49{txt}, p = 0.5)) = {res} 0.0001
+
+{txt}{hline}
+-> situation = 7
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        44{col 29}        32
+    {txt}negative {c |}{res}{col 17}        20{col 29}        32
+        {txt}zero {c |}{res}{col 17}         5{col 29}         5
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}44{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}44{txt}, p = 0.5) = {res} 0.0018
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}20{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}20{txt}, p = 0.5) = {res} 0.9992
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}44{txt} or #negative >= {res}44{txt}) =
+         min(1, 2*Binomial(n = {res}64{txt}, x >= {res}44{txt}, p = 0.5)) = {res} 0.0037
+
+{txt}{hline}
+-> situation = 8
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        43{col 29}        32
+    {txt}negative {c |}{res}{col 17}        21{col 29}        32
+        {txt}zero {c |}{res}{col 17}         5{col 29}         5
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}43{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}43{txt}, p = 0.5) = {res} 0.0041
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}21{txt}) =
+         Binomial(n = {res}64{txt}, x >= {res}21{txt}, p = 0.5) = {res} 0.9982
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}43{txt} or #negative >= {res}43{txt}) =
+         min(1, 2*Binomial(n = {res}64{txt}, x >= {res}43{txt}, p = 0.5)) = {res} 0.0081
+
+{txt}{hline}
+-> situation = 9
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        32{col 29}        31
+    {txt}negative {c |}{res}{col 17}        30{col 29}        31
+        {txt}zero {c |}{res}{col 17}         7{col 29}         7
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}32{txt}) =
+         Binomial(n = {res}62{txt}, x >= {res}32{txt}, p = 0.5) = {res} 0.4495
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}30{txt}) =
+         Binomial(n = {res}62{txt}, x >= {res}30{txt}, p = 0.5) = {res} 0.6482
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}32{txt} or #negative >= {res}32{txt}) =
+         min(1, 2*Binomial(n = {res}62{txt}, x >= {res}32{txt}, p = 0.5)) = {res} 0.8991
+
+{txt}{hline}
+-> situation = 10
+
+Sign test
+
+        sign {c |}    observed    expected
+{hline 13}{c +}{hline 24}
+    positive {c |}{res}{col 17}        41{col 29}      32.5
+    {txt}negative {c |}{res}{col 17}        24{col 29}      32.5
+        {txt}zero {c |}{res}{col 17}         4{col 29}         4
+{txt}{hline 13}{c +}{hline 24}
+         all {c |}{res}{col 17}        69{col 29}        69
+
+{txt}One-sided tests:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV > 0
+      Pr(#positive >= {res}41{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}41{txt}, p = 0.5) = {res} 0.0232
+
+{txt}  Ho: median of IV = 0 vs.
+  Ha: median of IV < 0
+      Pr(#negative >= {res}24{txt}) =
+         Binomial(n = {res}65{txt}, x >= {res}24{txt}, p = 0.5) = {res} 0.9876
+
+{txt}Two-sided test:
+  Ho: median of IV = 0 vs.
+  Ha: median of IV != 0
+      Pr(#positive >= {res}41{txt} or #negative >= {res}41{txt}) =
+         min(1, 2*Binomial(n = {res}65{txt}, x >= {res}41{txt}, p = 0.5)) = {res} 0.0464
+{txt}
+{com}. * Significant at p<0.05 for all games except 5 and 9.
+. restore
+{txt}
+{com}. 
+. **********************************************************************************
+. * Evidence from additional control experiment:
+. clear
+{txt}
+{com}. use Value.dta
+{txt}
+{com}. tab mae if type==1 & maecontrol==1
+
+        {txt}mae {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}         31       18.24       18.24
+{txt}          4 {c |}{res}          2        1.18       19.41
+{txt}          5 {c |}{res}          1        0.59       20.00
+{txt}         10 {c |}{res}          1        0.59       20.59
+{txt}         20 {c |}{res}          2        1.18       21.76
+{txt}         29 {c |}{res}          3        1.76       23.53
+{txt}         30 {c |}{res}          5        2.94       26.47
+{txt}         40 {c |}{res}          6        3.53       30.00
+{txt}         44 {c |}{res}          1        0.59       30.59
+{txt}         45 {c |}{res}          2        1.18       31.76
+{txt}         50 {c |}{res}         10        5.88       37.65
+{txt}         55 {c |}{res}          5        2.94       40.59
+{txt}         59 {c |}{res}         10        5.88       46.47
+{txt}         60 {c |}{res}         12        7.06       53.53
+{txt}         61 {c |}{res}          1        0.59       54.12
+{txt}         64 {c |}{res}          4        2.35       56.47
+{txt}         65 {c |}{res}          3        1.76       58.24
+{txt}         66 {c |}{res}          1        0.59       58.82
+{txt}         68 {c |}{res}          3        1.76       60.59
+{txt}         70 {c |}{res}         25       14.71       75.29
+{txt}         71 {c |}{res}          1        0.59       75.88
+{txt}         74 {c |}{res}          1        0.59       76.47
+{txt}         75 {c |}{res}          8        4.71       81.18
+{txt}         76 {c |}{res}          2        1.18       82.35
+{txt}         78 {c |}{res}          4        2.35       84.71
+{txt}         80 {c |}{res}          8        4.71       89.41
+{txt}         84 {c |}{res}          1        0.59       90.00
+{txt}         90 {c |}{res}          3        1.76       91.76
+{txt}         93 {c |}{res}          1        0.59       92.35
+{txt}         95 {c |}{res}          2        1.18       93.53
+{txt}         96 {c |}{res}          1        0.59       94.12
+{txt}         98 {c |}{res}          1        0.59       94.71
+{txt}         99 {c |}{res}          2        1.18       95.88
+{txt}        100 {c |}{res}          7        4.12      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}        170      100.00
+{txt}
+{com}. *18.2 % mae==1 choices.
+. 
+. tab wtp_del_control if mae==1 & type==1 & maecontrol==1
+
+{txt}wtp_del_con {c |}
+       trol {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+         -1 {c |}{res}         30       96.77       96.77
+{txt}         26 {c |}{res}          1        3.23      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}         31      100.00
+{txt}
+{com}. * 30 out of 31 decided to keep decision rights in the control treatment and not to pay for delegation.
+. **********************************************************************************
+. * 5.5.2: Regressions on MAE and peffort:
+. 
+. reg mae maeopt if maecontrol==0, cluster(subject)
+
+{txt}Linear regression                                      Number of obs ={res}    1380
+                                                       {txt}F(  1,   137) ={res}  122.77
+                                                       {txt}Prob > F      = {res} 0.0000
+                                                       {txt}R-squared     = {res} 0.0620
+                                                       {txt}Root MSE      = {res} 28.336
+
+{txt}{ralign 78:(Std. Err. adjusted for {res:138} clusters in subject)}
+{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         mae{col 14}{c |}      Coef.{col 26}   Std. Err.{col 38}      t{col 46}   P>|t|{col 54}     [95% Con{col 67}f. Interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}maeopt {c |}{col 14}{res}{space 2} .7432367{col 26}{space 2} .0670783{col 37}{space 1}   11.08{col 46}{space 3}0.000{col 54}{space 4}  .610594{col 67}{space 3} .8758794
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} 15.44203{col 26}{space 2}  3.45424{col 37}{space 1}    4.47{col 46}{space 3}0.000{col 54}{space 4} 8.611507{col 67}{space 3} 22.27255
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. * coefficient is 0.74, p<0.01.
+. 
+. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\hherz\Google Drive\The Value of Authority\Econometrica - Final\Data and Analysis\Value.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}21 Jul 2014, 13:50:52
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
