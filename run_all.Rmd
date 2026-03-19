@@ -1,0 +1,962 @@
+---
+title: "Delegation as a Prosocial Act under Social Awareness:
+Revisiting the Intrinsic Value of Decision Rights"
+author: "Tomo OKADA, Masao NAGATSUKA, and Toshihiko NANBA"
+output:
+  html_document:
+    highlight: pygments
+    theme: cerulean
+    df_print: paged
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+    number_section: yes
+    code_folding: hide
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+- This file reproduces the main results, figures, and appendix tables reported in the manuscript.
+
+### Load required packages {-}
+```{r, message=FALSE}
+library(tidyverse)
+library(zTree)
+library(DT)
+library(here)
+library(fixest)
+library(modelsummary)
+library(readxl)
+```
+
+---
+
+### Load the original data from Bartling et al. (2014) {-}
+
+- The results differ slightly from those reported in the paper, possibly because the session on 121206 contains missing values.
+
+```{r}
+bfsdata <- read.csv(here("data", "Bartling_original", "Bartling_original.csv")) %>%
+  filter(maecontrol == 0,
+         type == "Principal")
+
+datatable(
+  bfsdata,
+  extensions = "Scroller",
+  options = list(
+    deferRender = TRUE,
+    scrollY = 200,
+    scrollX = TRUE,
+    scroller = TRUE
+  )
+)
+```
+
+---
+
+### Function for processing experimental data {-}
+
+```{r, message = FALSE}
+bartling <- function(file_path) {
+  
+  data <- zTreeTables(file_path, ignore.errors = TRUE)
+  
+  #-----------------------------
+  # Global data
+  #-----------------------------
+  data_global <- 
+    data$globals %>% 
+    filter(Treatment == 1) %>%
+    rename_all(gsub, pattern = "+\\[", replacement = "_") %>% 
+    rename_all(gsub, pattern = "]", replacement = "")
+  
+  #-----------------------------
+  # Subject-level data
+  #-----------------------------
+  data_subjects <- data$subjects
+  
+  #-----------------------------
+  # Questionnaire data
+  #-----------------------------
+  questionnaire <- 
+    readxl::read_excel(here("data", "Quesstionnaire.xlsx")) %>%
+    select(
+      sessionid = session_id,
+      subject,
+      female,
+      economics,
+      q_gaze_next = q2_8,
+      q_gaze_nearby = q2_9,
+      q_gaze_experimenter = q2_10,
+      q_analyzed_by_experimenter = q2_11
+    ) %>%
+    mutate(
+      sessionid = as.character(sessionid),
+      subject = as.numeric(subject)
+    )
+  
+  #-----------------------------
+  # Final profit
+  #-----------------------------
+  finalprofit <- 
+    data_subjects %>% 
+    filter(Treatment == max(Treatment)) %>%
+    select(finalprofit = Profitm, subject = Subject)
+  
+  #-----------------------------
+  # Loss gamble / IoC
+  #-----------------------------
+  loss_ioc <- 
+    data_subjects %>%
+    filter(Treatment == 4) %>%
+    transmute(
+      subject = Subject,
+      lossgamble = lossgamble,
+      IoC = IoC
+    ) %>%
+    distinct()
+  
+  #-----------------------------
+  # Part 1
+  #-----------------------------
+  data1 <- 
+    data_subjects %>%
+    filter(Treatment == 1) %>%
+    rename_all(gsub, pattern = "+\\[", replacement = "_") %>% 
+    rename_all(gsub, pattern = "]", replacement = "") %>%
+    mutate(
+      showupfee = 1200,
+      type = ifelse(Type == 1, "Principal", "Agent")
+    ) %>%
+    relocate(Treatment, subject = Subject, sessionid = Date, showupfee, type) %>%
+    {
+      if ("Group_1" %in% names(.)) select(., !Group_1:ncol(.)) else .
+    } %>%
+    select(!Period:slow) %>%
+    inner_join(finalprofit, by = "subject")
+  
+  #-----------------------------
+  # Reshape Part 1 into tidy format
+  #-----------------------------
+  data1 <- data1 %>%
+    pivot_longer(
+      !c(subject, sessionid, finalprofit, showupfee, type, Treatment),
+      names_to = c(".value", "situation"),
+      names_sep = "_"
+    ) %>% 
+    mutate(
+      period_game = case_when(
+        situation == 1 ~ data_global$O_1,
+        situation == 2 ~ data_global$O_2,
+        situation == 3 ~ data_global$O_3,
+        situation == 4 ~ data_global$O_4,
+        situation == 5 ~ data_global$O_5,
+        situation == 6 ~ data_global$O_6,
+        situation == 7 ~ data_global$O_7,
+        situation == 8 ~ data_global$O_8,
+        situation == 9 ~ data_global$O_9,
+        situation == 10 ~ data_global$O_10
+      ),
+      va = case_when(
+        situation == 1 ~ data_global$VA_1,
+        situation == 2 ~ data_global$VA_2,
+        situation == 3 ~ data_global$VA_3,
+        situation == 4 ~ data_global$VA_4,
+        situation == 5 ~ data_global$VA_5,
+        situation == 6 ~ data_global$VA_6,
+        situation == 7 ~ data_global$VA_7,
+        situation == 8 ~ data_global$VA_8,
+        situation == 9 ~ data_global$VA_9,
+        situation == 10 ~ data_global$VA_10
+      ),
+      vb = case_when(
+        situation == 1 ~ data_global$VB_1,
+        situation == 2 ~ data_global$VB_2,
+        situation == 3 ~ data_global$VB_3,
+        situation == 4 ~ data_global$VB_4,
+        situation == 5 ~ data_global$VB_5,
+        situation == 6 ~ data_global$VB_6,
+        situation == 7 ~ data_global$VB_7,
+        situation == 8 ~ data_global$VB_8,
+        situation == 9 ~ data_global$VB_9,
+        situation == 10 ~ data_global$VB_10
+      ),
+      vc = case_when(
+        situation == 1 ~ data_global$VC_1,
+        situation == 2 ~ data_global$VC_2,
+        situation == 3 ~ data_global$VC_3,
+        situation == 4 ~ data_global$VC_4,
+        situation == 5 ~ data_global$VC_5,
+        situation == 6 ~ data_global$VC_6,
+        situation == 7 ~ data_global$VC_7,
+        situation == 8 ~ data_global$VC_8,
+        situation == 9 ~ data_global$VC_9,
+        situation == 10 ~ data_global$VC_10
+      ),
+      vd = case_when(
+        situation == 1 ~ data_global$VD_1,
+        situation == 2 ~ data_global$VD_2,
+        situation == 3 ~ data_global$VD_3,
+        situation == 4 ~ data_global$VD_4,
+        situation == 5 ~ data_global$VD_5,
+        situation == 6 ~ data_global$VD_6,
+        situation == 7 ~ data_global$VD_7,
+        situation == 8 ~ data_global$VD_8,
+        situation == 9 ~ data_global$VD_9,
+        situation == 10 ~ data_global$VD_10
+      ),
+      stakesize = ifelse(situation <= 5, "low",
+                  ifelse(situation >= 6, "high", NA)),
+      conflict = ifelse(situation == 1, "0.75(Low)",
+                 ifelse(situation == 2, "0.75(Low)",
+                 ifelse(situation == 3, "0.5(High)",
+                 ifelse(situation == 4, "0.5(High)",
+                 ifelse(situation == 5, "1(No)",
+                 ifelse(situation == 6, "0.75(Low)",
+                 ifelse(situation == 7, "0.75(Low)",
+                 ifelse(situation == 8, "0.5(High)",
+                 ifelse(situation == 9, "0.5(High)",
+                 ifelse(situation == 10, "1(No)", NA)))))))))),
+      cost = ifelse(type == "Principal", pcost, acost),
+      situation = as.numeric(situation)
+    ) %>%
+    relocate(
+      c(sessionid, subject, situation, 
+        finalprofit, showupfee, type,
+        period_game, aeffort, peffort,
+        mae = MAE, varianta = VariantA, 
+        variantp = VariantP)
+    ) %>%
+    select(!c(Treatment, acost, pcost))
+  
+  #-----------------------------
+  # Part 2
+  #-----------------------------
+  data2 <- data_subjects %>%
+    filter(Treatment == 2) %>%
+    rename_all(gsub, pattern = "+\\[", replacement = "_") %>%
+    rename_all(gsub, pattern = "]", replacement = "") %>%
+    select(Subject, OL_1:offeraccept_20) %>%
+    pivot_longer(
+      -Subject,
+      names_to = c(".value", "situation"),
+      names_sep = "_"
+    ) %>%
+    mutate(situation = as.numeric(situation))
+  
+  data2_control_lottery <- 
+    data2 %>%
+    filter(situation <= 10) %>%
+    mutate(period_lottery = OL, subject = Subject) %>%
+    select(!c(OL, Subject))
+  
+  data2_delegation_lottery <- 
+    data2 %>%
+    filter(situation > 10) %>%
+    mutate(situation = situation - 10) %>%
+    select(
+      period_lottery_del = OL, 
+      offeracceptd = offeraccept,
+      subject = Subject, 
+      situation
+    )
+  
+  data2 <- 
+    inner_join(
+      data2_control_lottery, 
+      data2_delegation_lottery, 
+      by = c("subject", "situation")
+    ) %>%
+    relocate(period_lottery, period_lottery_del, offeraccept, offeracceptd) %>%
+    filter(offeraccept != 0 & offeraccept != 1)
+  
+  #-----------------------------
+  # Merge Part 1 and Part 2
+  #-----------------------------
+  x <- 
+    inner_join(data1, data2, by = c("subject", "situation")) %>%
+    left_join(loss_ioc, by = "subject") %>%
+    mutate(
+      IV = ifelse(type == "Principal", offeracceptd - offeraccept, NA)
+    ) %>%
+    select(-j)
+  
+  #-----------------------------
+  # Merge questionnaire data
+  #-----------------------------
+  x <- 
+    x %>%
+    mutate(
+      sessionid = as.character(sessionid),
+      subject = as.numeric(subject)
+    ) %>%
+    left_join(questionnaire, by = c("sessionid", "subject"))
+  
+  return(x)
+}
+```
+
+---
+
+### Load and prepare the experimental data {-}
+
+```{r, include=FALSE}
+T1 <- 
+  rbind(
+    bartling(here("data", "211129_0916.xls")), 
+    bartling(here("data", "221024_0854.xls")), 
+    bartling(here("data", "221125_0902.xls")), 
+    bartling(here("data", "230117_0857.xls")), 
+    bartling(here("data", "230224_0850.xls"))
+  ) %>%
+  mutate(treatment = 1, .before = 1)
+
+T2 <- 
+  rbind(
+    bartling(here("data", "211126_1144.xls")),
+    bartling(here("data", "221024_1245.xls")),
+    bartling(here("data", "221125_1222.xls")),
+    bartling(here("data", "230117_1153.xls"))
+  ) %>%
+  mutate(treatment = 2, .before = 1)
+
+T3 <- 
+  rbind(
+    bartling(here("data", "211217_1030.xls")), 
+    bartling(here("data", "221110_0846.xls")), 
+    bartling(here("data", "221205_0923.xls")), 
+    bartling(here("data", "230116_0854.xls"))
+  ) %>%
+  mutate(treatment = 3, .before = 1)
+
+T4 <- 
+  rbind(
+    bartling(here("data", "211217_1213.xls")), 
+    bartling(here("data", "221110_1229.xls")),
+    bartling(here("data", "221205_1232.xls")), 
+    bartling(here("data", "230116_1234.xls")),
+    bartling(here("data", "230224_1226.xls"))
+  ) %>%
+  mutate(treatment = 4, .before = 1)
+
+# Combined dataset including both principals and agents
+tidy_data <- rbind(T1, T2, T3, T4)
+
+# Dataset restricted to principals
+data <- 
+  tidy_data %>%
+  filter(type == "Principal") %>%
+  group_by(sessionid, subject) %>%
+  mutate(participant = cur_group_id()) %>%
+  ungroup()
+```
+
+**Treatment Description.**
+
+- T1: Partitioned and unidentified counterpart  
+- T2: No partition and unidentified counterpart  
+- T3: Partitioned and identified counterpart  
+- T4: No partition and identified counterpart  
+
+--- 
+
+**Participants: 324 subjects (3236 observations).**  
+  
+- T1: 42 pairs (419 observations; 1 observation dropped because offeraccept was 0 or 1)
+- T2: 39 pairs (387 observations; 3 observations dropped because offeraccept was 0 or 1)
+- T3: 42 pairs (420 observations)
+- T4: 39 pairs (390 observations)
+
+```{r}
+data %>%
+  group_by(treatment) %>%
+  summarise(
+    total_obs = n()
+  )
+```
+
+---
+
+- Display the dataset
+
+```{r}
+tidy_data %>%
+  datatable(
+    data =., 
+    #filter = 'bottom',
+    extensions = 'Scroller',
+    options = list(
+    deferRender = TRUE,
+    scrollY = 200,
+    scrollX = TRUE,
+    scroller = TRUE
+  ))
+
+```
+
+---
+
+### Analysis{-}
+
+#### 4.2 Intrinsic Value of Decision Rights (IV){-}
+
+```{r}
+
+# Function to create bar plots by treatment
+
+treatment_bar <- 
+  function (df, var, num1, num2) {
+      x <- df %>%
+            group_by(treatment) %>%
+            ggplot(aes(x= treatment, 
+                       y = {{ var }})) +
+            coord_cartesian(ylim=c(num1, num2)) +
+            stat_summary(geom = "col", fun = "mean", fill = "grey50", width = 0.5) +  
+            stat_summary( fun.data = "mean_se", 
+                          geom = "errorbar", 
+                          width = .2, color = "grey20") +
+            theme_bw() +
+            labs(x = "Treatment") +
+            theme(axis.title.y = element_blank())
+      
+      return(x)
+  }
+
+
+```
+
+
+- Descriptive statistics of IV by treatment, including Bartling et al. (2014)
+
+```{r}
+
+# Combine IV data from our experiment with Bartling et al. (2014)
+
+data_main <- data %>%
+  select(IV, mae, peffort, treatment)
+
+bfsdata_main <- bfsdata %>%
+  select(IV, mae, peffort) %>%
+  mutate(treatment = "Bartling et al. (2014)")
+
+data_main_joined <- rbind(data_main, bfsdata_main) 
+
+# Summary statistics by treatment
+data_main_joined  %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_IV = mean(IV, na.rm = TRUE),
+    sd_IV   = sd(IV, na.rm = TRUE),
+    n       = sum(!is.na(IV)),
+    se_IV   = sd_IV / sqrt(n)
+  )
+```
+
+- Measured intrinsic value of decision rights (IV) by treatment (Figure 2)
+
+
+
+```{r}
+# Bar plot of IV by treatment (with standard error bars)
+
+data %>%
+  treatment_bar(., IV, 0, 45)
+
+```
+
+**Measured IV: T1 vs T4**
+
+- We first compare the measured intrinsic value of decision rights (IV) between T1 and T4 using a two-sided Wilcoxon rank-sum test.
+- The null hypothesis of equal distributions is rejected ($W = 95{,}606$, $p < 0.001$).  
+- IV is significantly higher in T1 than in T4, consistent with H2P rather than H2R.
+
+```{r}
+
+# Extract observations for T1 and T4 only
+df_T1T4 <- data %>%
+  filter(treatment %in% c(1, 4)) %>%
+  mutate(treatment = factor(treatment))
+
+# Two-sided Wilcoxon rank-sum test
+wilcox.test(
+  IV ~ treatment,
+  data = df_T1T4,
+  exact = FALSE
+)
+
+```
+  
+**Regression analysis for measured IV**  
+
+- We next estimate regression models for measured IV. 
+- Columns (1) and (2) use treatment indicators with T1 as the reference category.
+- Columns (3) and (4) decompose the treatment effects into the two treatment dimensions: openness (open) and counterpart identification (identified).
+- Following Ferreira et al. (2020), Columns (2) and (4) additionally control for gender, a dummy for students in Economics or Management, and behavioral measures from the Loss Aversion and Illusion of Control tasks.
+
+```{r}
+
+# Define treatment dimensions: openness (no partition) and counterpart identification
+data <- data %>%
+  mutate(
+    open = ifelse(treatment %in% c(2, 4), 1, 0),
+    identified = ifelse(treatment %in% c(3, 4), 1, 0)
+  )
+
+# Treatment-based specifications
+res_tr1 <- feols(
+  IV ~ i(treatment, ref = 1),
+  data = data,
+  cluster = "participant"
+)
+
+res_tr2 <- feols(
+  IV ~ i(treatment, ref = 1) + lossgamble + IoC + female + economics,
+  data = data,
+  cluster = "participant"
+)
+
+# Mechanism-based specifications
+res_mech1 <- feols(
+  IV ~ open * identified,
+  data = data,
+  cluster = ~participant
+)
+
+res_mech2 <- feols(
+  IV ~ open * identified + lossgamble + IoC + female + economics,
+  data = data,
+  cluster = ~participant
+)
+
+# Regression table (displayed and exported)
+modelsummary(
+  list(
+    "(1) Treatment" = res_tr1,
+    "(2) Treatment" = res_tr2,
+    "(3) Mechanism" = res_mech1,
+    "(4) Mechanism" = res_mech2
+  ),
+  coef_rename = c(
+    "treatment::2" = "T2",
+    "treatment::3" = "T3",
+    "treatment::4" = "T4",
+    "lossgamble" = "Loss Aversion",
+    "IoC" = "Illusion of Control",
+    "female" = "Female",
+    "economics" = "Economics & Management"
+  ),
+  coef_order = c(
+    "treatment::2",
+    "treatment::3",
+    "treatment::4",
+    "open",
+    "identified",
+    "open:identified",
+    "lossgamble",
+    "IoC",
+    "female",
+    "economics"
+  ),
+  stars = c("*" = .1, "**" = .05, "***" = .01),
+  statistic = "({std.error})",
+  gof_omit = "IC|Log|Adj"
+)
+```
+
+**H3 test: positivity of IV in all treatments**
+
+- Finally, we test Hypothesis 3 by examining whether the mean measured IV is significantly greater than zero in each treatment.
+- We report the treatment-level mean IV, the raw p-value from a one-sample t-test against zero, and the Bonferroni-adjusted p-value.
+- The mean IV is significantly positive in all treatments (all Bonferroni-adjusted $p < 0.001$), supporting H3.
+
+```{r}
+# H3 test: positivity of IV in all treatments
+data %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_IV = mean(IV, na.rm = TRUE),
+    p_raw = t.test(IV, mu = 0)$p.value
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_raw, method = "bonferroni")
+  )
+```
+
+--- 
+
+#### 4.3 Delegation Threshold (<u>e</u>) {-}
+
+- Descriptive statistics of minimum effort requirement (<u>e</u>) by treatment, including Bartling et al. (2014)
+
+```{r}
+# Summary statistics by treatment
+data_main_joined  %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_mae = mean(mae, na.rm = TRUE),
+    sd_mae   = sd(mae, na.rm = TRUE),
+    n       = sum(!is.na(mae)),
+    se_mae   = sd_mae / sqrt(n)
+  )
+```
+
+- Minimum effort requirement (<u>e</u>) by treatment (Figure 3)
+
+```{r}
+# Bar plot of MAE by treatment (with standard error bars)
+data %>%
+  group_by(treatment) %>%
+  treatment_bar(., mae, 45, 65) +
+  theme_bw()
+
+```
+
+
+**Minimum effor requirement <u>e</u>: T1 vs T4**
+
+- We next compare the minimum effort requirement (<u>e</u>) between T1 and T4 using a two-sided Wilcoxon rank-sum test. 
+- The null hypothesis of equal distributions is rejected ($W = 97{,}040$, $p < 0.001$). 
+- <u>e</u> is significantly higher in T1 than in T4, consistent with H2P rather than H2R.
+
+```{r}
+# Two-sided Wilcoxon rank-sum test
+wilcox.test(
+  mae ~ treatment,
+  data = df_T1T4,
+  exact = FALSE
+)
+```
+
+**Regression analysis for minimum effort requirement (<u>e</u>)**
+
+- We estimate regression models for the minimum effort requirement (<u>e</u>).  
+- The set of explanatory variables is identical to that used in the IV regressions.
+
+```{r}
+# Treatment-based specifications
+res_tr1 <- feols(
+  mae ~ i(treatment, ref = 1),
+  data = data,
+  cluster = "participant"
+)
+
+res_tr2 <- feols(
+  mae ~ i(treatment, ref = 1) + lossgamble + IoC + female + economics,
+  data = data,
+  cluster = "participant"
+)
+
+# Mechanism-based specifications
+res_mech1 <- feols(
+  mae ~ open * identified,
+  data = data,
+  cluster = ~participant
+)
+
+res_mech2 <- feols(
+  mae ~ open * identified + lossgamble + IoC + female + economics,
+  data = data,
+  cluster = ~participant
+)
+
+# Regression table
+modelsummary(
+  list(
+    "(1) Treatment" = res_tr1,
+    "(2) Treatment" = res_tr2,
+    "(3) Mechanism" = res_mech1,
+    "(4) Mechanism" = res_mech2
+  ),
+  coef_rename = c(
+    "treatment::2" = "T2",
+    "treatment::3" = "T3",
+    "treatment::4" = "T4",
+    "lossgamble" = "Loss Aversion",
+    "IoC" = "Illusion of Control",
+    "female" = "Female",
+    "economics" = "Economics & Management"
+  ),
+  coef_order = c(
+    "treatment::2",
+    "treatment::3",
+    "treatment::4",
+    "open",
+    "identified",
+    "open:identified",
+    "lossgamble",
+    "IoC",
+    "female",
+    "economics"
+  ),
+  stars = c("*" = .1, "**" = .05, "***" = .01),
+  statistic = "({std.error})",
+  gof_omit = "IC|Log|Adj"
+)
+```
+
+---  
+
+
+#### 4.4 Ruling Out Alternative Explanations {-}
+
+- Descriptive statistics of principal/s effort level (E) by treatment, including Bartling et al. (2014)
+
+```{r}
+# Summary statistics by treatment
+data_main_joined  %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_peffort = mean(peffort, na.rm = TRUE),
+    sd_peffort   = sd(peffort, na.rm = TRUE),
+    n       = sum(!is.na(peffort)),
+    se_peffort   = sd_peffort / sqrt(n)
+  )
+
+```
+
+- Principal's effort level (E) by treatment (Figure 4)
+
+```{r}
+# Bar plot of MAE by treatment (with standard error bars)
+
+data %>%
+  group_by(treatment) %>%
+  treatment_bar(., peffort, 50, 70) +
+  theme_bw()
+```
+
+**Regression analysis for principal's effort level (E)**
+
+- We estimate regression models for principal's effort level (E)).  
+- The set of explanatory variables is identical to that used in the IV regressions.
+
+```{r}
+# Treatment-based specifications
+res_tr1 <- feols(
+  peffort ~ i(treatment, ref = 1),
+  data = data,
+  cluster = "participant"
+)
+
+res_tr2 <- feols(
+  peffort ~ i(treatment, ref = 1) + lossgamble + IoC + female + economics,
+  data = data,
+  cluster = "participant"
+)
+
+
+# Mechanism-based specifications
+res_mech1<- feols(peffort ~ open * identified,
+      data = data,
+      cluster = ~participant)
+
+res_mech2<- feols(peffort ~ open * identified + lossgamble + IoC + female + economics,
+      data = data,
+      cluster = ~participant)
+
+# Regression table
+modelsummary(
+  list(
+    "(1) Treatment" = res_tr1,
+    "(2) Treatment" = res_tr2,
+    "(3) Mechanism" = res_mech1,
+    "(4) Mechanism" = res_mech2
+  ),
+  coef_rename = c(
+    "treatment::2" = "T2",
+    "treatment::3" = "T3",
+    "treatment::4" = "T4",
+    "lossgamble" = "Loss Aversion",
+    "IoC" = "Illusion of Control",
+    "female" = "Female",
+    "economics" = "Economics & Management"
+  ),
+  coef_order = c(
+    "treatment::2",
+    "treatment::3",
+    "treatment::4",
+    "open",
+    "identified",
+    "open:identified",
+    "lossgamble",
+    "IoC"
+  ),
+  stars = c("*" = .1, "**" = .05, "***" = .01),
+  statistic = "({std.error})",
+  gof_omit = "IC|Log|Adj"
+)
+```
+
+- The Wald test examines whether all treatment effects (T2–T4 relative to T1) are jointly equal to zero.  
+- The null cannot be rejected ($p = 0.872$), indicating no overall treatment effect on effort relative to T1.
+```{r}
+wald(res_tr1, keep = "treatment")
+```
+
+---
+
+
+### Appendix A: Self-reported awareness of others {-}
+
+**Post-experimental questionnaire items (social awareness measures).**
+
+- Q1: During the experiment, were you concerned about the presence or gaze of the participant sitting next to you?  
+- Q2: During the experiment, were you concerned about the presence or gaze of other nearby participants, excluding the one sitting next to you?  
+- Q3: During the experiment, were you concerned about the presence or gaze of the experiment staff?  
+- Q4: During the experiment, were you concerned that the experimenters would later observe data on your behavior?  
+
+---  
+
+- Responses were recorded on a seven-point Likert scale, where 1 indicates “not at all concerned,” 4 indicates a neutral response, and 7 indicates “very concerned.”
+
+- All statistics are based on responses from participants in the role of principals.
+
+- The table reports treatment-level means of each item (with standard deviations in parentheses). The rightmost column reports p-values from ANOVA tests of equality across treatments.
+
+```{r}
+#--------------------------
+# 1. Descriptive statistics
+#--------------------------
+# Compute means, standard deviations, and sample sizes by treatment
+
+desc_stats <- data %>%
+  group_by(treatment) %>%
+  summarise(
+    q_gaze_next_mean  = mean(q_gaze_next, na.rm = TRUE),
+    q_gaze_next_sd    = sd(q_gaze_next, na.rm = TRUE),
+    q_gaze_next_n     = sum(!is.na(q_gaze_next)),
+
+    q_gaze_nearby_mean  = mean(q_gaze_nearby, na.rm = TRUE),
+    q_gaze_nearby_sd    = sd(q_gaze_nearby, na.rm = TRUE),
+    q_gaze_nearby_n     = sum(!is.na(q_gaze_nearby)),
+
+    q_gaze_experimenter_mean = mean(q_gaze_experimenter, na.rm = TRUE),
+    q_gaze_experimenter_sd   = sd(q_gaze_experimenter, na.rm = TRUE),
+    q_gaze_experimenter_n    = sum(!is.na(q_gaze_experimenter)),
+
+    q_analyzed_by_experimenter_mean = mean(q_analyzed_by_experimenter, na.rm = TRUE),
+    q_analyzed_by_experimenter_sd   = sd(q_analyzed_by_experimenter, na.rm = TRUE),
+    q_analyzed_by_experimenter_n    = sum(!is.na(q_analyzed_by_experimenter)),
+
+    .groups = "drop"
+  )
+
+#--------------------------
+# 2. ANOVA
+#--------------------------
+# Test whether treatment differences are statistically significant
+
+anova_q_gaze_next <- summary(aov(q_gaze_next ~ factor(treatment), data = data))
+anova_q_gaze_nearby <- summary(aov(q_gaze_nearby ~ factor(treatment), data = data))
+anova_q_gaze_experimenter <- summary(aov(q_gaze_experimenter ~ factor(treatment), data = data))
+anova_q_analyzed_by_experimenter <- summary(aov(q_analyzed_by_experimenter ~ factor(treatment), data = data))
+
+# Extract p-values
+p_q_gaze_next <- anova_q_gaze_next[[1]]["factor(treatment)", "Pr(>F)"]
+p_q_gaze_nearby <- anova_q_gaze_nearby[[1]]["factor(treatment)", "Pr(>F)"]
+p_q_gaze_experimenter <- anova_q_gaze_experimenter[[1]]["factor(treatment)", "Pr(>F)"]
+p_q_analyzed_by_experimenter <- anova_q_analyzed_by_experimenter[[1]]["factor(treatment)", "Pr(>F)"]
+
+#--------------------------
+# 3. Appendix table: means
+#--------------------------
+# Prepare treatment-level means for each variable
+
+appendix_means <- data %>%
+  group_by(treatment) %>%
+  summarise(
+    q_gaze_next = mean(q_gaze_next, na.rm = TRUE),
+    q_gaze_nearby = mean(q_gaze_nearby, na.rm = TRUE),
+    q_gaze_experimenter = mean(q_gaze_experimenter, na.rm = TRUE),
+    q_analyzed_by_experimenter = mean(q_analyzed_by_experimenter, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = c(q_gaze_next, q_gaze_nearby, q_gaze_experimenter, q_analyzed_by_experimenter),
+    names_to = "variable",
+    values_to = "mean"
+  ) %>%
+  mutate(treatment = paste0("T", treatment)) %>%
+  pivot_wider(
+    names_from = treatment,
+    values_from = mean
+  )
+
+#--------------------------
+# 4. Appendix table: standard deviations
+#--------------------------
+# Prepare treatment-level standard deviations
+
+appendix_sds <- data %>%
+  group_by(treatment) %>%
+  summarise(
+    q_gaze_next = sd(q_gaze_next, na.rm = TRUE),
+    q_gaze_nearby = sd(q_gaze_nearby, na.rm = TRUE),
+    q_gaze_experimenter = sd(q_gaze_experimenter, na.rm = TRUE),
+    q_analyzed_by_experimenter = sd(q_analyzed_by_experimenter, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = c(q_gaze_next, q_gaze_nearby, q_gaze_experimenter, q_analyzed_by_experimenter),
+    names_to = "variable",
+    values_to = "sd"
+  ) %>%
+  mutate(treatment = paste0("T", treatment)) %>%
+  pivot_wider(
+    names_from = treatment,
+    values_from = sd,
+    names_prefix = "sd_"
+  )
+
+#--------------------------
+# 5. Appendix table: p-values
+#--------------------------
+# Store ANOVA p-values
+
+appendix_p <- data.frame(
+  variable = c("q_gaze_next", "q_gaze_nearby", "q_gaze_experimenter", "q_analyzed_by_experimenter"),
+  p_value = c(p_q_gaze_next, p_q_gaze_nearby, p_q_gaze_experimenter, p_q_analyzed_by_experimenter)
+)
+
+#--------------------------
+# 6. Final appendix table
+#--------------------------
+# Combine means, standard deviations, and p-values
+
+appendix_table <- appendix_means %>%
+  left_join(appendix_sds, by = "variable") %>%
+  left_join(appendix_p, by = "variable") %>%
+  mutate(
+    variable = recode(variable,
+      "q_gaze_next" = "Q1",
+      "q_gaze_nearby" = "Q2",
+      "q_gaze_experimenter" = "Q3",
+      "q_analyzed_by_experimenter" = "Q4"
+    ),
+    T1 = paste0(round(T1, 2), " (", round(sd_T1, 2), ")"),
+    T2 = paste0(round(T2, 2), " (", round(sd_T2, 2), ")"),
+    T3 = paste0(round(T3, 2), " (", round(sd_T3, 2), ")"),
+    T4 = paste0(round(T4, 2), " (", round(sd_T4, 2), ")"),
+    p_value = round(p_value, 3)
+  ) %>%
+  select(variable, T1, T2, T3, T4, p_value)
+
+appendix_table
+```
+
+
+
+```{r}
+sessionInfo()
+```
+
+
+
+
